@@ -1,0 +1,58 @@
+name: TED-bevakning
+
+# Kör varje vardag kl 07:00 UTC (≈ 08:00–09:00 svensk tid).
+# Du kan också starta den manuellt under fliken "Actions".
+on:
+  schedule:
+    - cron: "0 7 * * 1-5"
+  workflow_dispatch: {}
+
+# Rättigheter som behövs för att publicera webbsidan och spara seen.json.
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  bevaka:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checka ut koden
+        uses: actions/checkout@v4
+
+      - name: Sätt upp Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installera beroenden
+        run: pip install -r requirements.txt
+
+      - name: Kör bevakning (hämtar + bygger index.html)
+        env:
+          TED_SMTP_PASSWORD: ${{ secrets.TED_SMTP_PASSWORD }}
+        run: python bevakning.py
+
+      - name: Spara "sedda" upphandlingar
+        run: |
+          git config user.name "ted-bevakning-bot"
+          git config user.email "bot@example.com"
+          git add seen.json
+          git commit -m "Uppdatera seen.json [skip ci]" || echo "Inga ändringar"
+          git push || echo "Inget att pusha"
+
+      - name: Förbered webbsida
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  publicera:
+    needs: bevaka
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publicera till GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
