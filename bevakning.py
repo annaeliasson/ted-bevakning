@@ -67,40 +67,37 @@ def load_config():
 
 
 def build_query(cfg):
-    """Bygger TED:s expert-query-sträng från config.
+    """Bygger TED:s expert-query med BEKRÄFTAD fungerande v3-syntax.
 
-    Logik:  (CPV-träff  ELLER  fritext-träff)  OCH  land i listan
-    Fritextdelen är poängen – den fångar upphandlingar med 'fel' CPV-kod.
+    Verifierat mot live-API:t (diagnos.py):
+      - FT="ord"                  fulltext, citattecken krävs
+      - classification-cpv=KOD    CPV-fält, =, ingen parentes runt enstaka kod
+      - CY=SWE                    köparland, BARA bokstäver (INTE [SWE])
+      - villkor binds med AND / OR, hela relevansdelen inom parentes
+
+    Form:
+      (FT="ord1" OR FT="ord2" OR classification-cpv=71220000 OR ...) AND (CY=SWE OR CY=NOR ...)
     """
     cpv_codes = [str(c).split("-")[0].strip() for c in cfg.get("cpv_codes", [])]
     countries = [c.strip().upper() for c in cfg.get("countries", ["SWE"])]
     keywords = [k.strip() for k in cfg.get("keywords", []) if k.strip()]
 
-    clauses = []
+    terms = []
+    for code in cpv_codes:
+        terms.append(f"classification-cpv={code}")
+    for kw in keywords:
+        terms.append(f'FT="{kw}"')
 
-    if cpv_codes:
-        cpv_list = " ".join(cpv_codes)
-        clauses.append(f"classification-cpv IN ({cpv_list})")
-
-    if keywords:
-        # Frasmatchning i titel + beskrivning. Citattecken => exakt fras.
-        kw_clauses = []
-        for kw in keywords:
-            kw_clauses.append(f'notice-title ~ ("{kw}")')
-            kw_clauses.append(f'description-proc ~ ("{kw}")')
-        clauses.append("(" + " OR ".join(kw_clauses) + ")")
-
-    if not clauses:
-        print("Varning: varken CPV-koder eller nyckelord angivna.", file=sys.stderr)
-        relevance = "*"
+    if terms:
+        relevance = "(" + " OR ".join(terms) + ")"
     else:
-        relevance = "(" + " OR ".join(clauses) + ")"
+        print("Varning: inga söktermer (CPV/nyckelord) angivna.", file=sys.stderr)
+        relevance = 'FT="*"'
 
-    country_clause = ""
     if countries:
-        country_clause = " AND place-of-performance IN (" + " ".join(countries) + ")"
-
-    return relevance + country_clause
+        cy_clause = "(" + " OR ".join(f"CY={c}" for c in countries) + ")"
+        return f"{relevance} AND {cy_clause}"
+    return relevance
 
 
 # --------------------------------------------------------------------------- #
