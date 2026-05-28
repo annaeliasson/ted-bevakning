@@ -1,0 +1,71 @@
+# ============================================================
+#  TED-bevakning – konfiguration
+# ============================================================
+#  Allt du normalt behöver ändra finns i den här filen.
+#  Inga lösenord här! SMTP-lösenord sätts som miljövariabel
+#  TED_SMTP_PASSWORD (se README).
+# ============================================================
+
+# --- CPV-koder (er nuvarande uppsättning + de bredare paraplykoderna) ---
+# Bindestreck och kontrollsiffra får vara kvar – skriptet kapar dem.
+# Tips: de bredare koderna (71200000, 71400000, 39100000...) fångar
+# upphandlingar som annars hamnar utanför era smala koder.
+cpv_codes:
+  - 71220000   # Arkitektonisk formgivning
+  - 79931000   # Inredningstjänster
+  - 79932000   # Inredningsdesign
+  - 79933000   # Stödtjänster avseende design
+  - 79934000   # Möbeldesign
+  - 92311000   # Konstverk
+  - 92312000   # Artistiska tjänster
+  # --- Föreslagna tillägg (kommentera bort det ni inte vill ha) ---
+  - 71200000   # Arkitekttjänster (paraply)
+  - 71210000   # Arkitektrådgivning
+  - 71221000   # Arkitekttjänster för byggnader
+  - 71400000   # Stadsplanering och landskapsarkitektur
+  - 39100000   # Möbler
+  - 39130000   # Kontorsmöbler
+  - 39150000   # Diverse möbler och inredning
+  - 92313000   # Konstnärlig utsmyckning
+
+# --- Fritext (fångar upp det CPV-koderna missar) ---
+# Frasmatchas mot titel + beskrivning. Håll dem distinkta för
+# att undvika brus. Lägg till/ta bort fritt.
+keywords:
+  - inredningsarkitekt
+  - inredningsarkitektur
+  - inredningstjänster
+  - inredningsdesign
+  - möbeldesign
+  - möblering
+  - gestaltning
+  - konstnärlig utsmyckning
+  - rumsgestaltning
+
+# --- Länder (TED använder 3-bokstavskoder) ---
+# SWE=Sverige, NOR=Norge, DNK=Danmark, FIN=Finland, ISL=Island
+countries:
+  - SWE
+  - NOR
+  - DNK
+  - FIN
+
+# --- Hämtningsgränser ---
+page_limit: 100   # notiser per sida (max 100 hos TED)
+max_pages: 10     # max antal sidor per körning (100*10 = 1000 notiser)
+
+# --- Webbsida (GitHub Pages) ---
+# Rubrik och underrubrik på den genererade sidan (index.html).
+site_title: Upphandlingsbevakning
+site_subtitle: Aktuella upphandlingar inom inredning, arkitektur och design – Norden
+
+# --- E-post ---
+# Sätt enabled: false för att istället skriva rapporten i terminalen
+# (bra när du testar). Lösenordet sätts som miljövariabel, inte här.
+email:
+  enabled: false
+  smtp_host: smtp.gmail.com
+  smtp_port: 587
+  from: din-bevakning@gmail.com
+  to:
+    - upphandling@itg.studio
